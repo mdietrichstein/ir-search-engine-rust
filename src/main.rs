@@ -17,7 +17,8 @@ fn main() {
     // for token in token_generator {
     // }
 
-    let text = "Hallo <title>Ein titel</title> [B]WICHTIG[/B] supidupi &amp; &nbsp; A:B";
+
+    let text = "Hallo <title>Ein titel</title> [B]WICHTIG[/B] supidupi &amp; &nbsp; A:B !a -f #asdf#";
     let words = split_words(text, true, true, true);
 
     println!("{:?}", words);
