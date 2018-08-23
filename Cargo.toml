@@ -1,0 +1,8 @@
+[package]
+name = "text_retrieval"
+version = "0.1.0"
+authors = ["Marc Dietrichstein <marc@dietrichstein.net>"]
+
+[dependencies]
+regex = "1"
+lazy_static = "1.1.0"
