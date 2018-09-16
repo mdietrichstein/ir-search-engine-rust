@@ -1,25 +1,19 @@
-#[macro_use] extern crate lazy_static;
+extern crate lazy_static;
 extern crate text_retrieval;
 
-// use text_retrieval::tokenization::TokenGenerator;
-use text_retrieval::preprocessing::split_words;
+use text_retrieval::preprocessing::create_preprocessor;
+use text_retrieval::tokenization::create_token_stream;
 
 fn main() {
-    // let filepaths = vec![
-    //         String::from("./data/Adhoc/latimes/la010189"),
-    //         String::from("./data/Adhoc/latimes/la010190")
-    //     ];
+    let filepaths = vec![
+        String::from("./data/TREC8all/Adhoc/latimes/la010189"),
+        String::from("./data/TREC8all/Adhoc/latimes/la010190"),
+    ];
 
-    // let mut it = filepaths.iter();
+    let preprocessor = create_preprocessor(true, true, false, true);
+    let token_stream = create_token_stream(filepaths, &preprocessor, true, true, true, Some(2));
 
-    // let token_generator = TokenGenerator::new(&filepaths);
-
-    // for token in token_generator {
-    // }
-
-
-    let text = "Hallo <title>Ein titel</title> [B]WICHTIG[/B] supidupi &amp; &nbsp; A:B !a -f #asdf#";
-    let words = split_words(text, true, true, true);
-
-    println!("{:?}", words);
+    token_stream.for_each(|token| {
+        println!("{:?}", token);
+    });
 }

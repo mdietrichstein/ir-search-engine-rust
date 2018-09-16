@@ -1,9 +1,11 @@
+use preprocessing::{split_words, Preprocessor};
+use regex::Regex;
+use std::fs::File;
 use std::io;
 use std::io::prelude::*;
-use std::fs::File;
-use regex::Regex;
+use std::iter::repeat;
 
-use preprocessing::split_words;
+// setup
 
 lazy_static! {
     pub static ref DOC_PATTERN: Regex = Regex::new(r"(?s)<DOC>(.*?)</DOC>").unwrap();
@@ -11,83 +13,90 @@ lazy_static! {
     pub static ref TEXT_PATTERN: Regex = Regex::new(r"(?s)<TEXT>(.*?)</TEXT>").unwrap();
 }
 
-struct Token { doc_id: String, term: String, num_documents_processed: usize }
+// public interface
 
-pub struct TokenGenerator<'a> {
-    filepaths: Box<Iterator<Item = &'a String> + 'a>,
-    num_documents_processed: usize
+#[derive(Debug)]
+pub struct Token {
+    doc_id: String,
+    term: String,
+    num_documents_processed: usize,
 }
 
-impl <'a> TokenGenerator<'a> {
-    pub fn new(filepaths: &'a Vec<String>) -> TokenGenerator<'a> {
-        TokenGenerator {
-            filepaths: Box::new(filepaths.iter()),
-            num_documents_processed: 0
-        }
-    }
+pub fn create_token_stream<'a>(
+    filepaths: Vec<String>,
+    preprocessor: &'a Preprocessor,
+    strip_html_tags: bool,
+    strip_html_entities: bool,
+    strip_square_bracket_tags: bool,
+    min_length: Option<usize>,
+) -> Box<Iterator<Item = Token> + 'a> {
+    Box::new(
+        filepaths
+            .into_iter()
+            .flat_map(|filepath| regex_parse_documents_from_file(&filepath).unwrap())
+            .map(move |document| {
+                let (doc_id, content) = document;
 
-    fn regex_parse_documents_from_file(&mut self, filepath: &String) -> Result<Vec<(String, String)>, io::Error> {
-        let mut file = File::open(filepath)?;
+                let words = split_words(
+                    &content,
+                    strip_html_tags,
+                    strip_html_entities,
+                    strip_square_bracket_tags,
+                );
 
-        let mut content = String::new();
-        file.read_to_string(&mut content)?;
-
-        let mut documents: Vec<(String, String)> = vec![];
-
-        for captures in DOC_PATTERN.captures_iter(content.as_str()) {
-            let content = match captures.get(1) {
-                Some(content) => content.as_str(),
-                None => continue
-            };
-
-            let doc_number = match find_capture_at(1, &DOCNO_PATTERN, content) {
-                Some(doc_number) => doc_number.to_string(),
-                None => continue
-            };
-
-            let text = match find_capture_at(1, &TEXT_PATTERN, content) {
-                Some(text) => text.to_string(),
-                None => continue
-            };
-
-            documents.push((doc_number, text));
-        }
-
-        return Ok(documents);
-    }
+                (doc_id, words)
+            })
+            .map(move |(doc_id, words)| {
+                let terms = (*preprocessor)(&words);
+                (doc_id, terms)
+            })
+            .enumerate()
+            .flat_map(|(doc_num, (doc_id, terms))| {
+                repeat((doc_id, doc_num)).take(terms.len()).zip(terms)
+            })
+            .map(|((doc_id, doc_num), word)| Token {
+                doc_id: doc_id,
+                term: word,
+                num_documents_processed: doc_num,
+            }),
+    )
 }
 
-impl <'a> Iterator for TokenGenerator<'a> {
-    type Item = &'a String;
+// private helpers
 
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            let filepath = match self.filepaths.next() {
-                Some(f) => f,
-                None => return None
-            };
+fn regex_parse_documents_from_file(filepath: &str) -> Result<Vec<(String, String)>, io::Error> {
+    let mut file = File::open(filepath)?;
 
-            let documents = self.regex_parse_documents_from_file(filepath);
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
 
-            let documents = match documents {
-                Ok(documents) => documents,
-                Err(_) => continue
-            };
+    let mut documents: Vec<(String, String)> = vec![];
 
-            for (doc_id, content) in documents {
-                let words = split_words(&content, true, true, true);
+    for captures in DOC_PATTERN.captures_iter(content.as_str()) {
+        let content = match captures.get(1) {
+            Some(content) => content.as_str(),
+            None => continue,
+        };
 
-                self.num_documents_processed += 1;
-            }
+        let doc_number = match find_capture_at(1, &DOCNO_PATTERN, content) {
+            Some(doc_number) => doc_number.to_string(),
+            None => continue,
+        };
 
-            return Some(filepath)
-        }
+        let text = match find_capture_at(1, &TEXT_PATTERN, content) {
+            Some(text) => text.to_string(),
+            None => continue,
+        };
 
+        documents.push((doc_number, text));
     }
+
+    return Ok(documents);
 }
 
 fn find_capture_at<'a>(capture_position: usize, regex: &Regex, text: &'a str) -> Option<&'a str> {
-    regex.captures(text)
+    regex
+        .captures(text)
         .and_then(|captures| captures.get(capture_position))
         .map(|capture| capture.as_str().trim())
 }
