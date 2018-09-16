@@ -17,9 +17,9 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct Token {
-    doc_id: String,
-    term: String,
-    num_documents_processed: usize,
+    pub doc_id: String,
+    pub term: String,
+    pub num_documents_processed: usize,
 }
 
 pub fn create_token_stream<'a>(
