@@ -56,7 +56,9 @@ pub fn create_index_simple(filepaths: Vec<String>,
 
         for token in tokens.iter() {
             match current_term {
-                Some(term) if term == token.term => continue,
+                Some(term) if term == token.term => {
+                    // do nothing
+                },
                 Some(_) | None => {
                     if !document_ids.is_empty() {
                         let postings_list = to_bag_of_words(&document_ids);
@@ -108,11 +110,6 @@ fn flush_index_entry(file: &mut File, term: &str,
         {
             let entry = document_length_counter.entry(document_id.to_string()).or_insert(0);
             *entry += *term_frequency;
-
-            if *term_frequency > 1 {
-                println!("{} {}", document_id, term_frequency);
-            }
-            
         }
     }
 
@@ -144,20 +141,8 @@ fn to_bag_of_words(words: &Vec<&String>) -> Vec<PostingEntry> {
     let mut bow: HashMap<String, usize> = HashMap::new();
     
     for word in words {
-        // let entry = bow.entry(word.to_string()).or_insert(0);
-        // *entry += 1;
-       
-       let k = String::from("LA010189-0045");
-        if k == String::from("LA010189-0045") {
-            println!("{} {} {:?}", k, bow.contains_key(&k), bow.insert(String::from("LA010189-0045"), 10));
-            // println!("ay {} {}", word, entry);
-
-            
-        }
-
-        bow.insert(String::from("LA010189-0045"), 10);
-        
-        // bow.entry(k).or_insert(1);
+        let entry = bow.entry(word.to_string()).or_insert(0);
+        *entry += 1;
     }
 
     bow.into_iter().map(|(k, v)| (k.to_string(), v)).collect::<Vec<PostingEntry>>()
