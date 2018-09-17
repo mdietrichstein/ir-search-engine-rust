@@ -49,7 +49,7 @@ pub fn create_index_simple(filepaths: Vec<String>,
     {
         let mut output_file = OpenOptions::new()
                                 .write(true)
-                                .truncate(true)
+                                .create(true)
                                 .open(output_filepath)?;
 
         writeln!(output_file, "{}", num_documents_processed)?;
@@ -107,7 +107,12 @@ fn flush_index_entry(file: &mut File, term: &str,
 
         {
             let entry = document_length_counter.entry(document_id.to_string()).or_insert(0);
-            *entry += term_frequency;
+            *entry += *term_frequency;
+
+            if *term_frequency > 1 {
+                println!("{} {}", document_id, term_frequency);
+            }
+            
         }
     }
 
@@ -136,11 +141,23 @@ fn write_documents_stats(filepath: String,
 }
 
 fn to_bag_of_words(words: &Vec<&String>) -> Vec<PostingEntry> {
-    let mut bow = HashMap::new();
+    let mut bow: HashMap<String, usize> = HashMap::new();
     
     for word in words {
-        let entry = bow.entry(word).or_insert(0);
-        *entry += 1;
+        // let entry = bow.entry(word.to_string()).or_insert(0);
+        // *entry += 1;
+       
+       let k = String::from("LA010189-0045");
+        if k == String::from("LA010189-0045") {
+            println!("{} {} {:?}", k, bow.contains_key(&k), bow.insert(String::from("LA010189-0045"), 10));
+            // println!("ay {} {}", word, entry);
+
+            
+        }
+
+        bow.insert(String::from("LA010189-0045"), 10);
+        
+        // bow.entry(k).or_insert(1);
     }
 
     bow.into_iter().map(|(k, v)| (k.to_string(), v)).collect::<Vec<PostingEntry>>()
