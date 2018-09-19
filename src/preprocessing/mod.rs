@@ -40,6 +40,7 @@ pub fn split_words(
     strip_html_tags: bool,
     strip_html_entities: bool,
     strip_square_bracket_tags: bool,
+    min_length: Option<usize>,
 ) -> Vec<String> {
     let mut result = String::from(text);
 
@@ -60,7 +61,7 @@ pub fn split_words(
     return (&SPLIT_WORDS_PATTERN)
         .split(&result)
         .map(|s| s.to_string())
-        .filter(|s| !s.is_empty())
+        .filter(|s| s.len() > min_length.unwrap_or(0))
         .collect();
 }
 

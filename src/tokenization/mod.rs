@@ -42,6 +42,7 @@ pub fn create_token_stream<'a>(
                     strip_html_tags,
                     strip_html_entities,
                     strip_square_bracket_tags,
+                    min_length
                 );
 
                 (doc_id, words)
