@@ -1,23 +1,35 @@
 extern crate lazy_static;
 extern crate text_retrieval;
+extern crate glob;
 
+use glob::{glob_with, MatchOptions};
 use text_retrieval::preprocessing::create_preprocessor;
-// use text_retrieval::tokenization::create_token_stream;
 use text_retrieval::indexing::create_index_simple;
 
 fn main() {
-    let filepaths = vec![
-        String::from("./data/TREC8all/Adhoc/latimes/la010189"),
-        // String::from("./data/TREC8all/Adhoc/latimes/la010190"),
-    ];
-
     let preprocessor = create_preprocessor(true, false, false, false);
-    // let token_stream = create_token_stream(filepaths, &preprocessor, true, true, true, Some(2));
 
-    // token_stream.for_each(|token| {
-    //     println!("{:?}", token);
-    // });
+    let glob_pattern = "./data/TREC8all/Adhoc/latimes/*";
 
+    // let glob_pattern = "./data/TREC8all/Adhoc/**/*";
+
+    let filepaths = glob_with(glob_pattern, &MatchOptions {
+                            case_sensitive: true,
+                            require_literal_separator: true,
+                            require_literal_leading_dot: false
+                        })
+                        .unwrap()
+                        .filter_map(Result::ok)
+                        .map(|s| s.to_string_lossy().into_owned())
+                        .collect();
+
+    // let filepaths = vec![
+    //     String::from("./data/TREC8all/Adhoc/latimes/la010189"),
+    //     // String::from("./data/TREC8all/Adhoc/latimes/la010190"),
+    // ];
+
+    // println!("{:?}", filepaths);
+    
     create_index_simple(filepaths, &preprocessor,
                         String::from("simple.index"),
                         String::from("documents.stats"),
