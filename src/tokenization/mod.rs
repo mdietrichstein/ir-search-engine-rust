@@ -1,3 +1,5 @@
+use encoding_rs::Encoding;
+use encoding_rs_io::DecodeReaderBytesBuilder;
 use preprocessing::{split_words, Preprocessor};
 use regex::Regex;
 use std::fs::File;
@@ -42,7 +44,7 @@ pub fn create_token_stream<'a>(
                     strip_html_tags,
                     strip_html_entities,
                     strip_square_bracket_tags,
-                    min_length
+                    min_length,
                 );
 
                 (doc_id, words)
@@ -66,10 +68,14 @@ pub fn create_token_stream<'a>(
 // private helpers
 
 fn regex_parse_documents_from_file(filepath: &str) -> Result<Vec<(String, String)>, io::Error> {
-    let mut file = File::open(filepath)?;
+    let file = File::open(filepath)?;
+
+    let mut decoder = DecodeReaderBytesBuilder::new()
+        .encoding(Encoding::for_label("latin1".as_bytes()))
+        .build(file);
 
     let mut content = String::new();
-    file.read_to_string(&mut content)?;
+    decoder.read_to_string(&mut content)?;
 
     let mut documents: Vec<(String, String)> = vec![];
 
