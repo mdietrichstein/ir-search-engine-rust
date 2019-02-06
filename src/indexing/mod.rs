@@ -1,5 +1,5 @@
-use preprocessing::Preprocessor;
-use tokenization::{create_token_stream, Token};
+use crate::preprocessing::Preprocessor;
+use crate::tokenization::{create_token_stream, Token};
 
 use std::collections::HashMap;
 use std::fs;
@@ -143,7 +143,7 @@ fn write_index_entry(
     postings_list: &[PostingEntry],
 ) -> Result<(), Error> {
     let postings = postings_list
-        .into_iter()
+        .iter()
         .map(|(document_id, term_frequency)| format!("{}|{}", document_id, term_frequency))
         .collect::<Vec<String>>()
         .join(",");
@@ -164,7 +164,7 @@ fn write_documents_stats(
     fs::write(filepath, json_stats.to_string().as_bytes())
 }
 
-fn to_bag_of_words(words: &Vec<&String>) -> Vec<PostingEntry> {
+fn to_bag_of_words(words: &[&String]) -> Vec<PostingEntry> {
     let mut bow: HashMap<String, usize> = HashMap::new();
 
     for word in words {

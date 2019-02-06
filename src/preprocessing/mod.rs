@@ -58,11 +58,11 @@ pub fn split_words(
             .to_string();
     }
 
-    return (&SPLIT_WORDS_PATTERN)
+    (&SPLIT_WORDS_PATTERN)
         .split(&result)
         .map(|s| s.to_string())
         .filter(|s| s.len() > min_length.unwrap_or(0))
-        .collect();
+        .collect()
 }
 
 pub fn create_preprocessor(
@@ -89,7 +89,7 @@ pub fn create_preprocessor(
         steps.push(lemmatize);
     }
 
-    return Box::new(move |words| preprocess(&words, &steps));
+    Box::new(move |words| preprocess(&words, &steps))
 }
 
 // private helper methods
@@ -100,7 +100,7 @@ fn preprocess(words: &[String], steps: &[PreprocessingStep]) -> Vec<String> {
         processed = preprocessor(&processed);
     }
 
-    return processed;
+    processed
 }
 
 fn case_fold(words: &[String]) -> Vec<String> {

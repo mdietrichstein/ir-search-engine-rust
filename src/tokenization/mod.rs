@@ -1,6 +1,6 @@
+use crate::preprocessing::{split_words, Preprocessor};
 use encoding_rs::Encoding;
 use encoding_rs_io::DecodeReaderBytesBuilder;
-use preprocessing::{split_words, Preprocessor};
 use regex::Regex;
 use std::fs::File;
 use std::io;
@@ -58,7 +58,7 @@ pub fn create_token_stream<'a>(
                 repeat((doc_id, doc_num)).take(terms.len()).zip(terms)
             })
             .map(|((doc_id, doc_num), word)| Token {
-                doc_id: doc_id,
+                doc_id,
                 term: word,
                 num_documents_processed: doc_num,
             }),
@@ -71,7 +71,7 @@ fn regex_parse_documents_from_file(filepath: &str) -> Result<Vec<(String, String
     let file = File::open(filepath)?;
 
     let mut decoder = DecodeReaderBytesBuilder::new()
-        .encoding(Encoding::for_label("latin1".as_bytes()))
+        .encoding(Encoding::for_label(b"latin1"))
         .build(file);
 
     let mut content = String::new();
@@ -98,7 +98,7 @@ fn regex_parse_documents_from_file(filepath: &str) -> Result<Vec<(String, String
         documents.push((doc_number, text));
     }
 
-    return Ok(documents);
+    Ok(documents)
 }
 
 fn find_capture_at<'a>(capture_position: usize, regex: &Regex, text: &'a str) -> Option<&'a str> {
