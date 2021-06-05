@@ -6,6 +6,7 @@ use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::{Error, Write};
 use std::result::Result;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct TokenEntry {
@@ -17,18 +18,18 @@ pub struct TokenEntry {
 
 type PostingEntry = (String, usize);
 
-pub fn create_index_simple(
-    filepaths: Vec<String>,
+pub fn create_index_simple<P: AsRef<Path>>(
+    filepaths: Vec<P>,
     preprocessor: &Preprocessor,
-    output_filepath: String,
-    document_stats_path: String,
+    output_filepath: P,
+    document_stats_path: &str,
     strip_html_tags: bool,
     strip_html_entities: bool,
     strip_square_bracket_tags: bool,
     min_length: Option<usize>,
 ) -> Result<(), Error> {
     
-    let tokens = create_token_stream(
+    let token_stream = create_token_stream(
         filepaths,
         preprocessor,
         strip_html_tags,
@@ -37,7 +38,7 @@ pub fn create_index_simple(
         min_length,
     );
 
-    let mut tokens = tokens.collect::<Vec<Token>>();
+    let mut tokens = token_stream.collect::<Vec<Token>>();
 
     let num_documents_processed = if let Some(token) = tokens.last() {
         token.num_documents_processed
@@ -111,6 +112,56 @@ pub fn create_index_simple(
     Ok(())
 }
 
+pub fn create_index_spimi<P: AsRef<Path>>(
+    filepaths: Vec<P>,
+    preprocessor: &Preprocessor,
+    output_filepath: P,
+    document_stats_path: &str,
+    strip_html_tags: bool,
+    strip_html_entities: bool,
+    strip_square_bracket_tags: bool,
+    min_length: Option<usize>,
+) -> Result<(), Error> {
+
+    let mut token_stream = create_token_stream(
+        filepaths,
+        preprocessor,
+        strip_html_tags,
+        strip_html_entities,
+        strip_square_bracket_tags,
+        min_length,
+    );
+
+    let mut block_files: Vec<PathBuf> = vec![];
+    let mut num_documents_processed: usize = 0;
+
+    let mut is_exhausted = false;
+
+    loop {
+        if is_exhausted {
+            break;
+        }
+
+        spimi_invert(&mut token_stream, 10_000_000);
+
+    }
+
+    Ok(())
+}
+
+fn spimi_invert<'a>(
+    token_stream: &mut Box<dyn Iterator<Item=Token> + 'a>,
+    max_tokens_per_block: usize
+) -> (PathBuf, bool, usize) {
+    let processed_tokens: usize = 0;
+
+    for token in token_stream {
+
+    }
+
+    (PathBuf::from("bla"), false, 0)
+}
+
 fn flush_index_entry(
     file: &mut File,
     term: &str,
@@ -152,7 +203,7 @@ fn write_index_entry(
 }
 
 fn write_documents_stats(
-    filepath: String,
+    filepath: &str,
     document_terms_counter: &HashMap<String, usize>,
     document_length_counter: &HashMap<String, usize>,
 ) -> Result<(), Error> {

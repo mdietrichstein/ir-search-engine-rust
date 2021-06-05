@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::iter::repeat;
+use std::path::Path;
 
 // setup
 
@@ -24,18 +25,18 @@ pub struct Token {
     pub num_documents_processed: usize,
 }
 
-pub fn create_token_stream<'a>(
-    filepaths: Vec<String>,
+pub fn create_token_stream<'a, P: AsRef<Path> + 'a>(
+    filepaths: Vec<P>,
     preprocessor: &'a Preprocessor,
     strip_html_tags: bool,
     strip_html_entities: bool,
     strip_square_bracket_tags: bool,
     min_length: Option<usize>,
-) -> Box<Iterator<Item = Token> + 'a> {
+) -> Box<dyn Iterator<Item = Token> + 'a> {
     Box::new(
         filepaths
             .into_iter()
-            .flat_map(|filepath| regex_parse_documents_from_file(&filepath).unwrap())
+            .flat_map(|filepath| regex_parse_documents_from_file(filepath).unwrap())
             .map(move |document| {
                 let (doc_id, content) = document;
 
@@ -67,7 +68,7 @@ pub fn create_token_stream<'a>(
 
 // private helpers
 
-fn regex_parse_documents_from_file(filepath: &str) -> Result<Vec<(String, String)>, io::Error> {
+fn regex_parse_documents_from_file<P: AsRef<Path>>(filepath: P) -> Result<Vec<(String, String)>, io::Error> {
     let file = File::open(filepath)?;
 
     let mut decoder = DecodeReaderBytesBuilder::new()

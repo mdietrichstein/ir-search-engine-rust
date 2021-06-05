@@ -9,29 +9,29 @@ fn main() {
 
     // let glob_pattern = "./data/TREC8all/Adhoc/**/*";
 
-    let filepaths: Vec<String> = glob_with(
-        glob_pattern,
-        &MatchOptions {
-            case_sensitive: true,
-            require_literal_separator: true,
-            require_literal_leading_dot: false,
-        },
-    ).unwrap()
-        .filter_map(Result::ok)
-        .filter(|p| p.is_file())
-        .map(|s| s.to_string_lossy().into_owned())
-        .collect();
+    // let filepaths: Vec<String> = glob_with(
+    //     glob_pattern,
+    //     &MatchOptions {
+    //         case_sensitive: true,
+    //         require_literal_separator: true,
+    //         require_literal_leading_dot: false,
+    //     },
+    // ).unwrap()
+    //     .filter_map(Result::ok)
+    //     .filter(|p| p.is_file())
+    //     .map(|s| s.to_string_lossy().into_owned())
+    //     .collect();
 
-    // let filepaths = vec![
-    //     String::from("./data/TREC8all/Adhoc/latimes/la010189"),
-    //     // String::from("./data/TREC8all/Adhoc/latimes/la010190"),
-    // ];
+    let filepaths = vec![
+        "./data/TREC8all/Adhoc/latimes/la010189",
+        // String::from("./data/TREC8all/Adhoc/latimes/la010190"),
+    ];
 
     create_index_simple(
         filepaths,
         &preprocessor,
-        String::from("simple.index"),
-        String::from("documents.stats"),
+        "simple.index",
+        "documents.stats",
         true,
         true,
         true,
